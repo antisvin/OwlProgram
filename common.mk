@@ -2,8 +2,9 @@
 DSPLIB=Libraries/CMSIS/DSP_Lib/Source
 
 # Tool path
-TOOLROOT ?= Tools/gcc-arm-none-eabi-5_4-2016q2/bin/
+#TOOLROOT ?= Tools/gcc-arm-none-eabi-5_4-2016q2/bin/
 # TOOLROOT ?= Tools/gcc-arm-none-eabi-5_2-2015q4/bin/
+TOOLROOT ?= /usr/bin/
 
 CMSIS ?= Libraries/CMSIS/Include/
 

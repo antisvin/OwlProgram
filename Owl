@@ -4,7 +4,7 @@ SRC=$PWD # current working directory
 PATCH=$1 # first command line argument to script is the patch name
 shift;
 TARGET="$@" # second argument is target, e.g. run
-OWLPROGRAM=~/owl/OwlProgram
+OWLPROGRAM=~/dev/git/OwlProgram
 
 usage(){
 	echo "\
