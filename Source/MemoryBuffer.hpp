@@ -1,3 +1,6 @@
+#ifndef __MemoryBuffer_hpp__
+#define __MemoryBuffer_hpp__
+
 #include "Patch.h"
 #include "message.h"
 #include <string.h>
@@ -37,3 +40,5 @@ public:
     delete buffer;
   }
 };
+
+#endif /* __MemoryBuffer_hpp__ */

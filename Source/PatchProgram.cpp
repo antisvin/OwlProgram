@@ -11,6 +11,9 @@
 #ifdef USE_MIDI_CALLBACK
 #include "MidiMessage.h"
 #endif
+#ifdef USE_DIGITALBUS
+#include "DigitalBus.h"
+#endif
 #include "registerpatch.h"
 
 static PatchProcessor processor;
@@ -39,6 +42,9 @@ void doSetButton(uint8_t id, uint16_t value, uint16_t samples){
 	vec->buttons &= ~(1<<id);
     }
   }
+#if USE_DIGITALBUS
+  bus.setButton((PatchButtonId)id, value, samples);
+#endif
 }
 
 void onButtonChanged(uint8_t id, uint16_t value, uint16_t samples){
@@ -55,6 +61,57 @@ void onDrawCallback(uint8_t* pixels, uint16_t width, uint16_t height){
   }
 }
 #endif /* USE_SCREEN */
+
+#ifdef USE_DIGITALBUS
+void onBusCommand(uint8_t cmd, int16_t data){
+  if (processor.patch != NULL) {
+      processor.patch->processBusCommand(cmd, data);
+  }
+}
+
+void onBusMessage(const char* msg){
+  if(processor.patch != NULL){
+    processor.patch->processBusMessage(msg);
+  }
+}
+
+void onBusData(const uint8_t* data, uint16_t size){
+  if(processor.patch != NULL){
+    const ByteArray bus_data(const_cast<uint8_t*>(data), size);
+    processor.patch->processBusData(bus_data);
+  }
+}
+
+static void (*bus_parameter_send_callback)(uint8_t, uint16_t) = NULL;
+void doBusParameterSend(uint8_t pid, uint16_t data){
+  if(bus_parameter_send_callback != NULL)
+    bus_parameter_send_callback(pid, data);
+}
+
+static void (*bus_button_send_callback)(uint8_t, uint16_t) = NULL;
+void doBusButtonSend(uint8_t bid, uint16_t data){
+  if(bus_button_send_callback != NULL)
+    bus_button_send_callback(bid, data);
+}
+
+static void (*bus_command_send_callback)(uint8_t, uint16_t) = NULL;
+void doBusCommandSend(uint8_t cmd_id, uint16_t data){
+  if(bus_command_send_callback != NULL)
+    bus_command_send_callback(cmd_id, data);
+}
+
+static void (*bus_message_send_callback)(const char* msg) = NULL;
+void doBusMessageSend(const char* msg) {
+  if(bus_message_send_callback != NULL)
+    bus_message_send_callback(msg);
+}
+
+static void (*bus_data_send_callback)(const uint8_t *data, uint16_t size) = NULL;
+void doBusDataSend(const uint8_t *data, uint16_t size){
+  if(bus_data_send_callback != NULL)
+    bus_data_send_callback(data, size);
+}
+#endif /* USE_DIGITALBUS */
 
 #ifdef USE_MIDI_CALLBACK
 void onMidiCallback(uint8_t port, uint8_t status, uint8_t d1, uint8_t d2){
@@ -90,17 +147,39 @@ void setup(ProgramVector* pv){
   setSystemTables(pv);
 #ifdef USE_SCREEN
   void* drawArgs[] = {(void*)SYSTEM_FUNCTION_DRAW, (void*)&onDrawCallback};
-  getProgramVector()->serviceCall(OWL_SERVICE_REGISTER_CALLBACK, drawArgs, 2);
+  pv->serviceCall(OWL_SERVICE_REGISTER_CALLBACK, drawArgs, 2);
 #endif /* USE_SCREEN */
 #ifdef USE_MIDI_CALLBACK
   void* midiRxArgs[] = {(void*)SYSTEM_FUNCTION_MIDI, (void*)&onMidiCallback};
-  getProgramVector()->serviceCall(OWL_SERVICE_REGISTER_CALLBACK, midiRxArgs, 2);
+  pv->serviceCall(OWL_SERVICE_REGISTER_CALLBACK, midiRxArgs, 2);
 
   midi_send_callback = NULL;
   void* midiTxArgs[] = {(void*)SYSTEM_FUNCTION_MIDI, &midi_send_callback};
-  getProgramVector()->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, midiTxArgs, 2);
+  pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, midiTxArgs, 2);
 
 #endif /* USE_MIDI_CALLBACK */
+#if USE_DIGITALBUS
+  bus_parameter_send_callback = NULL;
+  void* busParameterArgs[] = {(void*)SYSTEM_FUNCTION_BUS_PARAMETER, &bus_parameter_send_callback};
+  pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, busParameterArgs, 2);
+
+  bus_button_send_callback = NULL;
+  void* busButtonArgs[] = {(void*)SYSTEM_FUNCTION_BUS_BUTTON, &bus_button_send_callback};
+  pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, busButtonArgs, 2);
+
+  bus_command_send_callback = NULL;
+  void* busCommandArgs[] = {(void*)SYSTEM_FUNCTION_BUS_COMMAND, &bus_command_send_callback};
+  pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, busCommandArgs, 2);
+
+  bus_data_send_callback = NULL;
+  void* busDataArgs[] = {(void*)SYSTEM_FUNCTION_BUS_DATA, &bus_data_send_callback};
+  pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, busDataArgs, 2);
+
+  bus_message_send_callback = NULL;
+  void* busMessageArgs[] = {(void*)SYSTEM_FUNCTION_BUS_MESSAGE, &bus_message_send_callback};
+  pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, busMessageArgs, 2);
+#endif /* USE_DIGITAL_BUS */
+
   samples = new SampleBuffer(pv->audio_blocksize);
 #include "registerpatch.cpp"
 }
@@ -147,10 +226,10 @@ void run(ProgramVector* pv){
       static int32_t step = 32;
       ProgramVector* pv = getProgramVector();
       for(int i=0; i < pv->audio_blocksize; ++i){
-	pv->audio_output[i*2] = value;
-	pv->audio_output[i*2+1] = value; // swap(value);
-	value += step;
-	if(value >= INT32_MAX)
-	  value = INT32_MIN;
+        pv->audio_output[i*2] = value;
+        pv->audio_output[i*2+1] = value; // swap(value);
+        value += step;
+        if(value >= INT32_MAX)
+          value = INT32_MIN;
       }
 #endif

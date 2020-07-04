@@ -15,6 +15,11 @@
 #include "MidiMessage.h"
 #endif /* USE_MIDI_CALLBACK */
 
+#ifdef USE_DIGITALBUS
+//#include "DigitalBus.h"
+#include "IntArray.h"
+#endif /* USE_DIGITALBUS */
+
 enum PatchChannelId {
   LEFT_CHANNEL = 0,
   RIGHT_CHANNEL = 1
@@ -77,6 +82,11 @@ public:
   virtual void processMidi(MidiMessage msg);
   virtual void sendMidi(MidiMessage msg);
 #endif /* USE_MIDI_CALLBACK */
+#ifdef USE_DIGITALBUS
+  virtual void processBusCommand(uint8_t cmd_id, uint16_t arg){};
+  virtual void processBusData(const ByteArray& data){};
+  virtual void processBusMessage(const char* msg){};
+#endif /* USE_DIGITALBUS */
 };
 
 #endif // __Patch_h__

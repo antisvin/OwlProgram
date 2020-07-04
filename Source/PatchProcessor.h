@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "Patch.h"
 #include "device.h"
+#include "MemoryBuffer.hpp"
 
 class ParameterUpdater {
 public:
@@ -12,6 +13,59 @@ public:
   virtual void setParameter(IntParameter* p){}
   virtual void setParameter(FloatParameter* p){}
 };
+
+template<typename T, typename V>
+class LinearParameterUpdater : public ParameterUpdater {
+private:
+  PatchParameter<T>* parameter;
+  T minimum;
+  T maximum;
+  V value;
+public:
+  LinearParameterUpdater(T min, T max, V initialValue)
+    : parameter(NULL), minimum(min), maximum(max), value(initialValue) {}
+  void update(int16_t newValue){
+    value = (newValue*(maximum-minimum))/4096+minimum;
+    if(parameter != NULL)
+      parameter->update((T)value);
+  }
+  void setParameter(PatchParameter<T>* p){
+    parameter = p;
+  }
+};
+
+// void setSkew(float mid){
+//   if (maximum > minimum)
+//     skew = log (0.5) / log ((mid - minimum) / (maximum - minimum));
+// }
+
+template<typename T, typename V>
+class ExponentialParameterUpdater : public ParameterUpdater {
+private:
+  PatchParameter<T>* parameter;
+  float skew;
+  T minimum;
+  T maximum;
+  V value;
+public:
+  ExponentialParameterUpdater(float skw, T min, T max, V initialValue)
+    : parameter(NULL), skew(skw), minimum(min), maximum(max), value(initialValue) {
+    //    ASSERT(skew > 0.0 && skew <= 2.0, "Invalid exponential skew value");
+    ASSERT(skew > 0.0, "Invalid exponential skew value");
+  }
+  void update(int16_t newValue){
+    float v = newValue/4096.0f;
+    v = expf(logf(v)/skew);
+    value = v*(maximum-minimum)+minimum;
+    if(parameter != NULL)
+      parameter->update((T)value);
+  }
+  void setParameter(PatchParameter<T>* p){
+    parameter = p;
+  }
+};
+
+
 
 class PatchProcessor {
 public:  

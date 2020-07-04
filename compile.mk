@@ -70,6 +70,11 @@ else
 CPPFLAGS    += -DOWL_CLASSIC
 endif
 
+ifdef DIGITALBUS
+CPPFLAGS   += -DUSE_DIGITALBUS
+CPP_SRC    += DigitalBus.cpp
+endif
+
 CC=gcc
 LD=gcc
 AR=ar
