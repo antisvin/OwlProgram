@@ -1,6 +1,9 @@
 #ifndef __IntArray_h__
 #define __IntArray_h__
 
+#include "message.h"
+#include <string.h>
+
 template <typename T>
 class BaseIntegerArray
 {
@@ -8,8 +11,8 @@ private:
   T* data;
   int size;
 public:
-  BaseIntegerArray();
-  BaseIntegerArray(T* data, int size);
+  BaseIntegerArray() = default;
+  BaseIntegerArray(T* data, int size) : data(data), size(size) {};
 
   int getSize() const{
     return size;
@@ -33,6 +36,54 @@ public:
     setAll(T(0));
   }
   
+  /**
+   * Copies the content of the array to another array.
+   * @param[out] destination the destination array
+  */  
+  void copyTo(BaseIntegerArray<T> destination) {
+    /// @note When built for ARM Cortex-M processor series, this method uses the optimized <a href="http://www.keil.com/pack/doc/CMSIS/General/html/index.html">CMSIS library</a>
+    copyTo(destination, min(size, destination.getSize()));    
+  }
+
+  /**
+   * Copies the content of the array to a location in memory.
+   * @param[out] destination a pointer to the beginning of the memory location to copy to.
+   * The **length***sizeof(T) bytes of memory starting at this location must have been allocated before calling this method.
+   * @param[in] length number of samples to copy
+  */
+  void copyTo(T* other, size_t length){
+    ASSERT(size >= length, "Array too small");
+    memcpy((void *)other, (void *)getData(), length*sizeof(T));
+  }
+
+  /**
+   * Copies the content of an array into another array.
+   * @param[in] source the source array
+  */
+  void copyFrom(BaseIntegerArray<T> source){
+    /// @note When built for ARM Cortex-M processor series, this method uses the optimized <a href="http://www.keil.com/pack/doc/CMSIS/General/html/index.html">CMSIS library</a>
+    copyFrom(source, min(size, source.getSize()));    
+  }
+  
+  /**
+   * Copies an array of intgegers into the array.
+   * @param[in] source a pointer to the beginning of the portion of memory to read from.
+   * @param[in] length number of samples to copy.
+  */
+  void copyFrom(T* other, size_t length){
+    ASSERT(size >= length, "Array too small");
+    memcpy((void *)getData(), (void *)other, length*sizeof(float));
+  }
+  
+  /**
+   * Copies the content of an array into a subset of the array.
+   * Copies **samples** elements from **source** to **destinationOffset** in the current array.
+   * @param[in] source the source array
+   * @param[in] destinationOffset the offset into the destination array 
+   * @param[in] samples the number of samples to copy
+   *
+  */
+
   /**
    * Element-wise sum between arrays.
    * Sets each element in **destination** to the sum of the corresponding element of the array and **operand2**

@@ -3,7 +3,7 @@
 #include "ServiceCall.h"
 //#include "ProgramVector.h"
 
-void DigitalBus::sendCommand(uint8_t cmd_id, uint16_t data){
+void DigitalBus::sendCommand(uint8_t cmd_id, int16_t data){
     doBusCommandSend(cmd_id, data);
 }
 
@@ -24,7 +24,7 @@ void DigitalBus::sendParameters(bool force){
             //registered_parameters[i].update(value);
             //value = registered_parameters[i]->get
             if (force || sent_parameters[i] != (uint16_t)value){
-                doBusParameterSend(registered_parameters[i]->getPid(), value);
+                doBusParameterSend(registered_parameters[i]->output_pid, value);
                 sent_parameters[i] = value;
             }
         }

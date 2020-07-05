@@ -63,8 +63,22 @@ void onDrawCallback(uint8_t* pixels, uint16_t width, uint16_t height){
 #endif /* USE_SCREEN */
 
 #ifdef USE_DIGITALBUS
+void onBusDiscover(){
+  bus.connected = true;
+  if (processor.patch != NULL){
+    processor.patch->processBusDiscover();
+  }
+}
+
+void onBusReset(){
+  bus.connected = false;
+  if (processor.patch != NULL){
+    processor.patch->processBusReset();
+  }
+}
+
 void onBusCommand(uint8_t cmd, int16_t data){
-  if (processor.patch != NULL) {
+  if (processor.patch != NULL){
       processor.patch->processBusCommand(cmd, data);
   }
 }
@@ -77,25 +91,32 @@ void onBusMessage(const char* msg){
 
 void onBusData(const uint8_t* data, uint16_t size){
   if(processor.patch != NULL){
-    const ByteArray bus_data(const_cast<uint8_t*>(data), size);
+    // We copy bus data to a temporary byte array for passing to patch.
+    // This would avoid theoretical situation when a flood of serial data overwrites
+    // values in buffer. If that can't happen, we could use data as is, but make object const
+    //const ByteArray bus_data(const_cast<uint8_t*>(data), size);
+    //ByteArray bus_data = ByteArray::create(size);
+    //bus_data.copyFrom(const_cast<uint8_t*>(data), size);
+    ByteArray bus_data(const_cast<uint8_t*>(data), size);
     processor.patch->processBusData(bus_data);
+    //ByteArray::destroy(bus_data);
   }
 }
 
-static void (*bus_parameter_send_callback)(uint8_t, uint16_t) = NULL;
-void doBusParameterSend(uint8_t pid, uint16_t data){
+static void (*bus_parameter_send_callback)(uint8_t, int16_t) = NULL;
+void doBusParameterSend(uint8_t pid, int16_t data){
   if(bus_parameter_send_callback != NULL)
     bus_parameter_send_callback(pid, data);
 }
 
-static void (*bus_button_send_callback)(uint8_t, uint16_t) = NULL;
-void doBusButtonSend(uint8_t bid, uint16_t data){
+static void (*bus_button_send_callback)(uint8_t, int16_t) = NULL;
+void doBusButtonSend(uint8_t bid, int16_t data){
   if(bus_button_send_callback != NULL)
     bus_button_send_callback(bid, data);
 }
 
-static void (*bus_command_send_callback)(uint8_t, uint16_t) = NULL;
-void doBusCommandSend(uint8_t cmd_id, uint16_t data){
+static void (*bus_command_send_callback)(uint8_t, int16_t) = NULL;
+void doBusCommandSend(uint8_t cmd_id, int16_t data){
   if(bus_command_send_callback != NULL)
     bus_command_send_callback(cmd_id, data);
 }
@@ -159,25 +180,43 @@ void setup(ProgramVector* pv){
 
 #endif /* USE_MIDI_CALLBACK */
 #if USE_DIGITALBUS
+  // Bus state callbacks
+  void* busDiscoverArgs[] = {(void*)SYSTEM_FUNCTION_BUS_DISCOVER, (void*)&onBusDiscover};
+  pv->serviceCall(OWL_SERVICE_REGISTER_CALLBACK, busDiscoverArgs, 2);
+
+  void* busResetArgs[] = {(void*)SYSTEM_FUNCTION_BUS_RESET, (void*)&onBusReset};
+  pv->serviceCall(OWL_SERVICE_REGISTER_CALLBACK, busResetArgs, 2);
+
+  // Bus receive callbacks
+  void* busCommandRxArgs[] = {(void*)SYSTEM_FUNCTION_BUS_COMMAND, (void*)&onBusCommand};
+  pv->serviceCall(OWL_SERVICE_REGISTER_CALLBACK, busCommandRxArgs, 2);
+
+  void* busDataRxArgs[] = {(void*)SYSTEM_FUNCTION_BUS_DATA, (void*)&onBusData};
+  pv->serviceCall(OWL_SERVICE_REGISTER_CALLBACK, busDataRxArgs, 2);
+
+  void* busMessageRxArgs[] = {(void*)SYSTEM_FUNCTION_BUS_MESSAGE, (void*)&onBusMessage};
+  pv->serviceCall(OWL_SERVICE_REGISTER_CALLBACK, busMessageRxArgs, 2);
+
+  // Bus transmit callbacks
   bus_parameter_send_callback = NULL;
-  void* busParameterArgs[] = {(void*)SYSTEM_FUNCTION_BUS_PARAMETER, &bus_parameter_send_callback};
-  pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, busParameterArgs, 2);
+  void* busParameterTxArgs[] = {(void*)SYSTEM_FUNCTION_BUS_PARAMETER, &bus_parameter_send_callback};
+  pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, busParameterTxArgs, 2);
 
   bus_button_send_callback = NULL;
-  void* busButtonArgs[] = {(void*)SYSTEM_FUNCTION_BUS_BUTTON, &bus_button_send_callback};
-  pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, busButtonArgs, 2);
+  void* busButtonTxArgs[] = {(void*)SYSTEM_FUNCTION_BUS_BUTTON, &bus_button_send_callback};
+  pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, busButtonTxArgs, 2);
 
   bus_command_send_callback = NULL;
-  void* busCommandArgs[] = {(void*)SYSTEM_FUNCTION_BUS_COMMAND, &bus_command_send_callback};
-  pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, busCommandArgs, 2);
+  void* busCommandTxArgs[] = {(void*)SYSTEM_FUNCTION_BUS_COMMAND, &bus_command_send_callback};
+  pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, busCommandTxArgs, 2);
 
   bus_data_send_callback = NULL;
-  void* busDataArgs[] = {(void*)SYSTEM_FUNCTION_BUS_DATA, &bus_data_send_callback};
-  pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, busDataArgs, 2);
+  void* busDataTxArgs[] = {(void*)SYSTEM_FUNCTION_BUS_DATA, &bus_data_send_callback};
+  pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, busDataTxArgs, 2);
 
   bus_message_send_callback = NULL;
-  void* busMessageArgs[] = {(void*)SYSTEM_FUNCTION_BUS_MESSAGE, &bus_message_send_callback};
-  pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, busMessageArgs, 2);
+  void* busMessageTxArgs[] = {(void*)SYSTEM_FUNCTION_BUS_MESSAGE, &bus_message_send_callback};
+  pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, busMessageTxArgs, 2);
 #endif /* USE_DIGITAL_BUS */
 
   samples = new SampleBuffer(pv->audio_blocksize);

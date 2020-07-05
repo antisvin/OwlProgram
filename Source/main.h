@@ -19,12 +19,14 @@
    void doMidiSend(uint8_t port, uint8_t d0, uint8_t d1, uint8_t d2);
 #endif /* USE_MIDI_CALLBACK */
 
-#ifdef USE_DIGITALBUS   
-   void doBusCommandSend(uint8_t cmd_id, uint16_t data);
+#ifdef USE_DIGITALBUS
+   void onBusDiscover();
+   void onBusReset();
+   void doBusCommandSend(uint8_t cmd_id, int16_t data);
    void doBusDataSend(const uint8_t* data, uint16_t size);
    void doBusMessageSend(const char* msg);
-   void doBusParameterSend(uint8_t pid, uint16_t data);
-   void doBusButtonSend(uint8_t bid, uint16_t data);
+   void doBusParameterSend(uint8_t pid, int16_t data);
+   void doBusButtonSend(uint8_t bid, int16_t data);
 #endif /* USE_DIGITALBUS */
 
 

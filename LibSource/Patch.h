@@ -83,8 +83,10 @@ public:
   virtual void sendMidi(MidiMessage msg);
 #endif /* USE_MIDI_CALLBACK */
 #ifdef USE_DIGITALBUS
+  virtual void processBusDiscover(){};
+  virtual void processBusReset(){};
   virtual void processBusCommand(uint8_t cmd_id, uint16_t arg){};
-  virtual void processBusData(const ByteArray& data){};
+  virtual void processBusData(ByteArray& data){};
   virtual void processBusMessage(const char* msg){};
 #endif /* USE_DIGITALBUS */
 };

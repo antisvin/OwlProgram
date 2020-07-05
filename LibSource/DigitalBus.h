@@ -26,6 +26,7 @@ enum DigitalBusStatus : int32_t {
 class DigitalBusParameter {
 public:
     DigitalBusParameter(PatchParameterId pid, bool smooth){
+        output_pid = pid;
         parameter = new IntParameter(pid);
         if (smooth){
             value = new SmoothStiffValue<float>(0.9, 0.9, 0);
@@ -53,15 +54,21 @@ public:
         return parameter->getPid();
     }
 
+    void setOutputId(PatchParameterId new_pid){
+        output_pid = new_pid;
+    }
+
 private:
+    PatchParameterId output_pid;
     IntParameter* parameter;
     ParameterUpdater* updater;    
     SmoothStiffValue<float>* value;
+
+    friend class DigitalBus;
 };
 
 class DigitalBus {
 public:
-//    DigitalBus() = default;
     // Parameter/button registration
     void registerParameter(const PatchParameterId pid, bool smooth) {
         if (num_parameters < MAX_BUS_PARAMETERS - 1){
@@ -76,10 +83,24 @@ public:
         if (num_buttons < MAX_BUS_BUTTONS - 1) 
             registered_buttons[num_buttons++] = bid;
     }
+    // Remapping parameters/buttons
+    void remapParameter(const PatchParameterId pid, PatchParameterId new_pid){
+        for (int i = 0; i < num_parameters; i++){
+            if (registered_parameters[i]->getPid() == pid){
+                registered_parameters[i]->setOutputId(new_pid);
+                break;
+            }
+        }
+    }
+    template<typename T>
+    void remapParameter(const PatchParameter<T>& param, PatchParameterId new_pid) {
+        remapParameter(param.getPid(), new_pid);
+    }
     // Protocol object sending
-    void sendCommand(uint8_t cmd_id, uint16_t arg);
+    void sendCommand(uint8_t cmd_id, int16_t arg);
     void sendData(const ByteArray& data);
     void sendMessage(const char* msg);
+    // Parameter/button sending.
     // Normally only incremental updates on parameter/button change are sent
     // but it's possible to force sending full state
     void sendParameters(bool force);
@@ -89,6 +110,11 @@ public:
     }
     // Various settings
     bool isEnabled();
+    // This flag is set implicitly via callbacks, which means that it's much
+    // faster compared to fetching state that uses service call to access bus state.
+    bool isConnected(){
+        return connected;
+    };
     void enable(bool state);
     DigitalBusStatus getStatus();
     int32_t getPeers();
@@ -101,6 +127,10 @@ private:
     int16_t button_values[MAX_BUS_BUTTONS];
     int16_t sent_buttons[MAX_BUS_BUTTONS];
     uint8_t num_buttons;
+
+    friend void onBusDiscover();
+    friend void onBusReset();
+    bool connected;
 };
 
 extern DigitalBus bus;

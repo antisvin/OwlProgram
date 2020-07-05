@@ -1,7 +1,24 @@
 #include "IntArray.h"
 
+
 #ifdef ARM_CORTEX
-template <> void BaseIntegerArry<int>::setAll(T value) {
+template<>
+void BaseIntegerArray<int>::copyTo(T* other, size_t length){
+  ASSERT(size >= length, "Array too small");
+  /// @note When built for ARM Cortex-M processor series, this method uses the optimized <a href="http://www.keil.com/pack/doc/CMSIS/General/html/index.html">CMSIS library</a>
+  arm_copy_q31(data, other, length);
+
+}
+
+template <>
+void BaseIntegerArray<int>::copyFrom(T* other, size_t length){
+  ASSERT(size >= length, "Array too small");
+  /// @note When built for ARM Cortex-M processor series, this method uses the optimized <a href="http://www.keil.com/pack/doc/CMSIS/General/html/index.html">CMSIS library</a>
+  arm_copy_q31(other, data, length);
+}
+
+template <>
+void BaseIntegerArry<int>::setAll(T value) {
   /*
    * @note When built for ARM Cortex-M processor series, this method uses the
    * optimized <a
@@ -38,6 +55,21 @@ void BaseIntegerArry<int>::setAll(T value) {
    * library</a>
    */
   arm_fill_q7(value, data, size);
+}
+
+template<>
+void BaseIntegerArray<uint8_t>::copyTo(T* other, size_t length){
+  ASSERT(size >= length, "Array too small");
+  /// @note When built for ARM Cortex-M processor series, this method uses the optimized <a href="http://www.keil.com/pack/doc/CMSIS/General/html/index.html">CMSIS library</a>
+  arm_copy_q7(data, other, length);
+
+}
+
+template <>
+void BaseIntegerArray<uint8_t>::copyFrom(T* other, size_t length){
+  ASSERT(size >= length, "Array too small");
+  /// @note When built for ARM Cortex-M processor series, this method uses the optimized <a href="http://www.keil.com/pack/doc/CMSIS/General/html/index.html">CMSIS library</a>
+  arm_copy_q7(other, data, length);
 }
 
 template <>
