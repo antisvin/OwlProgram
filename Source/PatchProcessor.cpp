@@ -61,7 +61,7 @@ void PatchProcessor::setParameterValues(int16_t *params){
 #endif
     for(int i=0; i<parameterCount; ++i)
       parameters[i]->update(params[i]);
-#if USE_DIGITALBUS
+#ifdef USE_DIGITALBUS
     bus.sendParameters(false);
     bus.sendButtons(false);
 #endif

@@ -31,25 +31,26 @@ void doSetPatchParameter(uint8_t id, int16_t value){
 void doSetButton(uint8_t id, uint16_t value, uint16_t samples){
   ProgramVector* vec = getProgramVector();
   if(vec->checksum >= PROGRAM_VECTOR_CHECKSUM_V12 &&
-     // // if it is not a MIDI note, check that value has changed
-     // (id > 15 || (bool)(vec->buttons&(1<<id)) != (bool)value) &&
-     vec->setButton != NULL){
+    // // if it is not a MIDI note, check that value has changed
+    // (id > 15 || (bool)(vec->buttons&(1<<id)) != (bool)value) &&
+    vec->setButton != NULL){
     vec->setButton((PatchButtonId)id, value, samples);
     if(id < 16){
       if(value)
-	vec->buttons |= (1<<id);
+        vec->buttons |= (1<<id);
       else
-	vec->buttons &= ~(1<<id);
+        vec->buttons &= ~(1<<id);
     }
   }
-#if USE_DIGITALBUS
-  bus.setButton((PatchButtonId)id, value, samples);
-#endif
 }
 
 void onButtonChanged(uint8_t id, uint16_t value, uint16_t samples){
-  if(processor.patch != NULL)
+  if(processor.patch != NULL) {
     processor.patch->buttonChanged((PatchButtonId)id, value, samples);
+#ifdef USE_DIGITALBUS
+    bus.setButton((PatchButtonId)id, value);
+#endif
+  }    
 }
 
 #ifdef USE_SCREEN
@@ -179,7 +180,7 @@ void setup(ProgramVector* pv){
   pv->serviceCall(OWL_SERVICE_REQUEST_CALLBACK, midiTxArgs, 2);
 
 #endif /* USE_MIDI_CALLBACK */
-#if USE_DIGITALBUS
+#ifdef USE_DIGITALBUS
   // Bus state callbacks
   void* busDiscoverArgs[] = {(void*)SYSTEM_FUNCTION_BUS_DISCOVER, (void*)&onBusDiscover};
   pv->serviceCall(OWL_SERVICE_REGISTER_CALLBACK, busDiscoverArgs, 2);
