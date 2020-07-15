@@ -16,7 +16,7 @@ void DigitalBus::sendMessage(const char* msg){
 }
 
 void DigitalBus::sendParameters(bool force){
-    if (num_parameters > 0) {
+    if (connected && num_parameters > 0) {
         auto pv = getProgramVector();
         for (int i = 0; i < num_parameters; i++){
             auto value = registered_parameters[i]->update();
@@ -32,12 +32,12 @@ void DigitalBus::sendParameters(bool force){
 }
 
 void DigitalBus::sendButtons(bool force){
-    if (num_buttons > 0) {
+    if (connected && num_buttons > 0) {
         auto pv = getProgramVector();
         for (int i = 0; i < num_buttons; i++){
-            auto value = bus.button_values[i];
+            auto value = bus.registered_buttons[i]->getValue();
             if (force || sent_buttons[i] != value){
-                doBusButtonSend(registered_buttons[i], value);
+                doBusButtonSend(registered_buttons[i]->getBid(), value);
                 sent_buttons[i] = value;
             }
         }
@@ -45,12 +45,38 @@ void DigitalBus::sendButtons(bool force){
 }
 
 bool DigitalBus::isEnabled() {
-
+    bool status;
+    void* args[] = {
+        (void*)(SYSEX_CONFIGURATION_DIGITAL_BUS_ENABLE), (void*)&status
+    };
+    int ret = getProgramVector()->serviceCall(OWL_SERVICE_GET_PARAMETERS, args, 2);
+    if(ret == OWL_SERVICE_OK){
+        return status;
+    }
+    else {
+        return false;
+    }
 }
-    
-void DigitalBus::enable(bool state) {
 
+bool DigitalBus::isMidiForwardingEnabled() {
+    bool status;
+    void* args[] = {
+        (void*)(SYSEX_CONFIGURATION_DIGITAL_BUS_FORWARD_MIDI), (void*)&status
+    };
+    int ret = getProgramVector()->serviceCall(OWL_SERVICE_GET_PARAMETERS, args, 2);
+    if(ret == OWL_SERVICE_OK){
+        return status;
+    }
+    else {
+        return false;
+    }
 }
+
+/*    
+void DigitalBus::enable(bool state) {}
+void DigitalBus::midiForwardingEnable(bool state) {}
+
+*/
 
 DigitalBusStatus DigitalBus::getStatus() {
     DigitalBusStatus status;
@@ -83,8 +109,12 @@ int32_t DigitalBus::getPeers() {
 void DigitalBus::clear() {
     for (int i = 0; i < num_parameters; i++){
         delete registered_parameters[i];
-    }
+    }    
     num_parameters = 0;
+
+    for (int i = 0; i < num_buttons; i++){
+        delete registered_buttons[i];
+    }    
     num_buttons = 0;
 };
 

@@ -67,40 +67,33 @@ void onDrawCallback(uint8_t* pixels, uint16_t width, uint16_t height){
 void onBusDiscover(){
   bus.connected = true;
   if (processor.patch != NULL){
-    processor.patch->processBusDiscover();
+    processor.patch->processBusDiscover(bus);
   }
 }
 
 void onBusReset(){
   bus.connected = false;
   if (processor.patch != NULL){
-    processor.patch->processBusReset();
+    processor.patch->processBusReset(bus);
   }
 }
 
 void onBusCommand(uint8_t cmd, int16_t data){
   if (processor.patch != NULL){
-      processor.patch->processBusCommand(cmd, data);
+      processor.patch->processBusCommand(bus, cmd, data);
   }
 }
 
 void onBusMessage(const char* msg){
   if(processor.patch != NULL){
-    processor.patch->processBusMessage(msg);
+    processor.patch->processBusMessage(bus, msg);
   }
 }
 
 void onBusData(const uint8_t* data, uint16_t size){
   if(processor.patch != NULL){
-    // We copy bus data to a temporary byte array for passing to patch.
-    // This would avoid theoretical situation when a flood of serial data overwrites
-    // values in buffer. If that can't happen, we could use data as is, but make object const
-    //const ByteArray bus_data(const_cast<uint8_t*>(data), size);
-    //ByteArray bus_data = ByteArray::create(size);
-    //bus_data.copyFrom(const_cast<uint8_t*>(data), size);
     ByteArray bus_data(const_cast<uint8_t*>(data), size);
-    processor.patch->processBusData(bus_data);
-    //ByteArray::destroy(bus_data);
+    processor.patch->processBusData(bus, bus_data);
   }
 }
 
@@ -236,6 +229,10 @@ void run(ProgramVector* pv){
       pv->programReady();
       samples->split32(pv->audio_input, pv->audio_blocksize);
       processor.setParameterValues(pv->parameters);
+#ifdef USE_DIGITALBUS
+      if (bus.isConnected())
+        processor.patch->processBus(bus);
+#endif /* USE_DIGITALBUS */
       processor.patch->processAudio(*samples);
       samples->comb32(pv->audio_output);
     }
@@ -245,6 +242,10 @@ void run(ProgramVector* pv){
       pv->programReady();
       samples->split24(pv->audio_input, pv->audio_blocksize);
       processor.setParameterValues(pv->parameters);
+#ifdef USE_DIGITALBUS
+      if (bus.isConnected())
+        processor.patch->processBus(bus);
+#endif /* USE_DIGITALBUS */
       processor.patch->processAudio(*samples);
       samples->comb24(pv->audio_output);
     }
@@ -254,6 +255,10 @@ void run(ProgramVector* pv){
       pv->programReady();
       samples->split16(pv->audio_input, pv->audio_blocksize);
       processor.setParameterValues(pv->parameters);
+#ifdef USE_DIGITALBUS
+      if (bus.isConnected())
+        processor.patch->processBus(bus);
+#endif /* USE_DIGITALBUS */
       processor.patch->processAudio(*samples);
       samples->comb16(pv->audio_output);
     }

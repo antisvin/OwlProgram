@@ -17,7 +17,9 @@
 
 #ifdef USE_DIGITALBUS
 //#include "DigitalBus.h"
+class DigitalBus;
 #include "IntArray.h"
+//class ByteArray;
 #endif /* USE_DIGITALBUS */
 
 enum PatchChannelId {
@@ -83,11 +85,13 @@ public:
   virtual void sendMidi(MidiMessage msg);
 #endif /* USE_MIDI_CALLBACK */
 #ifdef USE_DIGITALBUS
-  virtual void processBusDiscover(){};
-  virtual void processBusReset(){};
-  virtual void processBusCommand(uint8_t cmd_id, uint16_t arg){};
-  virtual void processBusData(ByteArray& data){};
-  virtual void processBusMessage(const char* msg){};
+  virtual void setupBus(DigitalBus& bus){};
+  virtual void processBusDiscover(DigitalBus& bus){};
+  virtual void processBusReset(DigitalBus& bus){};
+  virtual void processBus(DigitalBus& bus){};
+  virtual void processBusCommand(DigitalBus& bus, uint8_t cmd_id, uint16_t arg){};
+  virtual void processBusData(DigitalBus& bus, ByteArray& data){};
+  virtual void processBusMessage(DigitalBus& bus, const char* msg){};
 #endif /* USE_DIGITALBUS */
 };
 

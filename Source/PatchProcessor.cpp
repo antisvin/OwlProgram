@@ -19,6 +19,10 @@ PatchProcessor::~PatchProcessor(){
 }
 
 void PatchProcessor::clear(){
+#ifdef USE_DIGITALBUS
+  bus.clear();
+#endif
+
   for(int i=0; i<bufferCount; ++i){
     delete buffers[i];
     buffers[i] = NULL;
@@ -38,6 +42,10 @@ void PatchProcessor::clear(){
 void PatchProcessor::setPatch(Patch* p, const char* n){
   patch = p;
   name = n;
+#ifdef USE_DIGITALBUS
+  bus.clear();
+  p->setupBus(bus);
+#endif
 }
 
 AudioBuffer* PatchProcessor::createMemoryBuffer(int channels, int size){
