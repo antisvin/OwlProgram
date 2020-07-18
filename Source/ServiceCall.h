@@ -13,6 +13,9 @@
 #define SYSTEM_TABLE_POW                   "SPW"
 #define SYSTEM_FUNCTION_DRAW               "DRW"
 #define SYSTEM_FUNCTION_MIDI               "MDI"
+#define SYSTEM_FUNCTION_SETTINGS_RESET     "SRE"
+#define SYSTEM_FUNCTION_SETTINGS_STORE     "SST"
+#define SYSTEM_FUNCTION_SETTINGS_LOAD      "SLO"
 
 #define OWL_SERVICE_VERSION                OWL_SERVICE_VERSION_V1
 
