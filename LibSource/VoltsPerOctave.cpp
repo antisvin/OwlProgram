@@ -48,3 +48,13 @@ void VoltsPerOctave::getFrequency(FloatArray samples, FloatArray output){
 void VoltsPerOctave::getFrequency(FloatArray samples){
   getFrequency(samples, samples);
 }
+
+void VoltsPerOctave::saveSettings(bool input){
+  int32_t volts_offset = multiplier * UINT16_MAX;
+  int32_t volts_scalar = offset * UINT16_MAX;
+  void* args[] = {
+    (void*)(input ? "IO" : "OO"), (void*)&volts_offset,
+    (void*)(input ? "IS" : "OS"), (void*)&volts_scalar
+  };
+  int ret = getProgramVector()->serviceCall(OWL_SERVICE_SET_PARAMETERS, args, 4);
+}

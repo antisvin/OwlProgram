@@ -38,6 +38,11 @@ public:
   }
   void getFrequency(FloatArray samples, FloatArray output);
   void getFrequency(FloatArray samples);
+  /*
+   * Save settings to memory. It would be used if
+   * switching patches, but won't be written to flash
+   */
+  void saveSettings(bool input = true);
 };
 
 #endif /* __VoltsPerOctave_hpp__ */
