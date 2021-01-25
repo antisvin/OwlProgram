@@ -17,7 +17,8 @@ MEMORY
 /* ITCMRAM (rwx)     : ORIGIN = 0x00000000, LENGTH = 64K */
 /* LOADERRAM (rwx)   : ORIGIN = 0x30000000, LENGTH = 128K */
 /* FASTHEAP (rwx)    : ORIGIN = 0x20020000, LENGTH = 64K */
-PATCHRAM (rwx)    : ORIGIN = 0x24000000, LENGTH = 512K /* 512k total */
+/* PATCHRAM (rwx)    : ORIGIN = 0x24000000, LENGTH = 512K /* 512k total */
+PATCHRAM (rwx)       : ORIGIN = 0x2000c000, LENGTH = 80K   /* total DTCM RAM is 128kb */
 /* RAM_D3 (rwx)      : ORIGIN = 0x38000000, LENGTH = 64K */ /* Unused */
 EXTRAM (rwx)      : ORIGIN = 0xc0080000, LENGTH = 6400K
 }
