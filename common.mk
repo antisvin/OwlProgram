@@ -9,7 +9,7 @@ CMSIS ?= Libraries/CMSIS/Include/
 # Tools
 CC=$(TOOLROOT)arm-none-eabi-gcc
 LD=$(TOOLROOT)arm-none-eabi-gcc
-AR=$(TOOLROOT)arm-none-eabi-ar
+AR=$(TOOLROOT)arm-none-eabi-gcc-ar
 AS=$(TOOLROOT)arm-none-eabi-as
 NM=$(TOOLROOT)arm-none-eabi-nm
 CXX=$(TOOLROOT)arm-none-eabi-g++
@@ -40,7 +40,7 @@ INC_FLAGS += -I$(USB_DEVICE_FILE)/Core/inc -I$(USB_DEVICE_FILE)/Class/cdc/inc
 INC_FLAGS += -I$(USB_OTG_FILE)/inc
 CPPFLAGS += $(ARCH_FLAGS) $(INC_FLAGS) $(DEF_FLAGS)
 CFLAGS += -std=gnu11
-CXXFLAGS += -std=gnu++11
+CXXFLAGS += -std=gnu++14
 LDFLAGS += -T$(LDSCRIPT) $(ARCH_FLAGS)
 
 # compile and generate dependency info

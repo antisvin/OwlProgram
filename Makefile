@@ -81,7 +81,6 @@ all: patch
 .PHONY: .FORCE clean realclean run store docs help
 
 .FORCE:
-	@echo Building patch $(PATCHNAME)
 	@mkdir -p $(BUILD)/Source
 	@mkdir -p $(BUILD)/web
 
@@ -89,6 +88,7 @@ $(BUILD)/registerpatch.cpp: .FORCE
 	@echo "REGISTER_PATCH($(PATCHCLASS), \"$(PATCHNAME)\", $(PATCHIN), $(PATCHOUT));" > $@
 
 $(BUILD)/registerpatch.h: .FORCE
+	@echo Building patch $(PATCHNAME)
 	@echo "#include \"$(PATCHFILE)\"" > $@
 
 $(STARTUP): .FORCE
@@ -99,6 +99,10 @@ $(BUILD)/%.syx: $(BUILD)/%.bin
 
 patch: $(DEPS) ## build patch binary
 	@$(MAKE) -s -f compile.mk compile
+
+libs: .FORCE ## build patch libraries
+	@$(MAKE) -s -f compile.mk libs
+	@$(MAKE) -s -f web.mk libs
 
 web: $(DEPS) ## build Javascript patch
 	@$(MAKE) -s -f web.mk web
@@ -127,6 +131,10 @@ store: patch ## upload and save patch to attached OWL
 	@echo Sending patch $(PATCHNAME) to $(OWLDEVICE) to store in slot $(SLOT)
 	@$(FIRMWARESENDER) -q -in $(BUILD)/$(TARGET).bin -out "$(OWLDEVICE)" -store $(SLOT)
 
+resource: $(RESOURCE) ## upload and save resource to attached OWL
+	@echo Sending resource $(RESOURCE) to $(OWLDEVICE) to store in slot $(SLOT)
+	@$(FIRMWARESENDER) -q -in $(RESOURCE) -out "$(OWLDEVICE)" -store $(SLOT)
+
 docs: ## generate HTML documentation
 	@doxygen Doxyfile
 
@@ -137,7 +145,7 @@ clean: ## remove generated patch files
 	@rm -rf $(BUILD)/*
 
 realclean: clean ## remove all library object files
-	@find Libraries/ -name '*.o' -delete
+	@find Libraries/ -name '*.a' -delete
 
 size: patch ## show binary size metrics and large object summary
 	@$(MAKE) -s -f common.mk size
