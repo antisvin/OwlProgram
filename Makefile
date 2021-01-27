@@ -44,6 +44,15 @@ else ifdef TEST
 PATCHNAME   ?= $(TEST)
 PATCHCLASS  ?= $(PATCHNAME)Patch
 PATCHFILE   ?= $(PATCHNAME)Patch.hpp
+else ifdef SOUL
+# options for SOUL patch compilation
+PATCHNAME   ?= $(SOUL)
+PATCHCLASS  ?= SoulPatch
+PATCHFILE   ?= SoulPatch.hpp
+SOULCLASS   ?= $(SOUL)
+SOULFILE    ?= $(SOUL).soul
+SOULHPP     ?= $(SOUL).hpp
+DEPS        += soul
 else
 # options for C++ compilation
 PATCHNAME   ?= "Template"
@@ -69,6 +78,7 @@ export BUILD BUILDROOT TARGET
 export PATCHNAME PATCHCLASS PATCHSOURCE 
 export PATCHFILE PATCHIN PATCHOUT
 export HEAVYTOKEN HEAVYSERVICETOKEN  HEAVY
+export SOUL SOULCLASS SOULFILE SOULHPP
 export LDSCRIPT CPPFLAGS EMCCFLAGS ASFLAGS
 export CONFIG PLATFORM
 
@@ -78,7 +88,7 @@ DEPS += $(BUILD)/registerpatch.cpp $(BUILD)/registerpatch.h $(STARTUP)
 
 all: patch
 
-.PHONY: .FORCE clean realclean run store docs help
+.PHONY: .FORCE patch libs faust gen heavy web minify clean realclean run store docs help
 
 .FORCE:
 	@mkdir -p $(BUILD)/Source
@@ -119,6 +129,9 @@ heavy: .FORCE
 
 gen: .FORCE
 	@$(MAKE) -s -f gen.mk gen
+
+soul: .FORCE
+	@$(MAKE) -s -f soul.mk soul
 
 sysex: patch $(BUILD)/$(TARGET).syx ## package patch binary as MIDI sysex
 	@echo Built sysex $(PATCHNAME) in $(BUILD)/$(TARGET).syx
