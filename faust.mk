@@ -8,5 +8,5 @@ $(BUILD)/Source/FaustPatch.hpp: $(PATCHSOURCE)/$(FAUST).dsp
 	@cp FaustCode/owl.h $(PATCHSOURCE)
 
 $(BUILD)/Source/%Patch.hpp: $(PATCHSOURCE)/%.dsp
-	@$(FAUSTCC) $(FAUSTFLAGS) -I $(PATCHSOURCE) -i -inpl -mem -a FaustCode/owl.cpp -fm faustmath.h 1024 $< -o $@
+	@$(FAUSTCC) $(FAUSTFLAGS) -I $(PATCHSOURCE) -i -inpl -mem -a FaustCode/owl.cpp -fm faustmath.h -dlt 1024 $< -o $@
 
