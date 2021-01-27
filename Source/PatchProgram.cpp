@@ -89,6 +89,11 @@ void setup(ProgramVector* pv){
 
 #endif /* USE_MIDI_CALLBACK */
   switch(pv->audio_format){
+  case AUDIO_FORMAT_24B32:
+    // Switch to quad audio
+    pv->audio_format = AUDIO_FORMAT_24B32_4X;
+    samples = new SampleBuffer(4, pv->audio_blocksize);
+    break;
   case AUDIO_FORMAT_24B16_2X:
     samples = new SampleBuffer(2, pv->audio_blocksize);
     break;
