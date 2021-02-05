@@ -40,6 +40,12 @@ PATCHNAME   ?= $(GEN)
 PATCHCLASS  ?= GenPatch
 PATCHFILE   ?= GenPatch.hpp
 DEPS        += gen
+else ifdef MAXIMILIAN
+# options for Maximilian compilation
+PATCHNAME   ?= $(MAXIMILIAN)
+PATCHCLASS  ?= MaximilianPatch
+PATCHFILE   ?= MaximilianPatch.hpp
+DEPS        += maximilian
 else ifdef TEST
 PATCHNAME   ?= $(TEST)
 PATCHCLASS  ?= $(PATCHNAME)Patch
@@ -86,7 +92,7 @@ STARTUP = $(BUILD)/Source/startup.s
 
 DEPS += $(BUILD)/registerpatch.cpp $(BUILD)/registerpatch.h $(STARTUP)
 
-all: patch
+all: libs
 
 .PHONY: .FORCE patch libs faust gen heavy web minify clean realclean run store docs help
 
@@ -129,6 +135,9 @@ heavy: .FORCE
 
 gen: .FORCE
 	@$(MAKE) -s -f gen.mk gen
+
+maximilian: .FORCE
+	@$(MAKE) -s -f maximilian.mk maximilian
 
 soul: .FORCE
 	@$(MAKE) -s -f soul.mk soul
@@ -173,6 +182,8 @@ as: patch ## build assembly file (Build/patch.s)
 
 test: $(DEPS) ## run test patch
 	@$(MAKE) -s -f test.mk test
+
+check: patch ## run tests (compile dummy patch)
 
 help: ## show this help
 	@echo 'Usage: make [target] ...'
