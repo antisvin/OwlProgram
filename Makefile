@@ -28,6 +28,9 @@ PATCHNAME   ?= $(FAUST)
 PATCHCLASS  ?= FaustPatch
 PATCHFILE   ?= FaustPatch.hpp
 DEPS        += faust
+ifneq (,$(findstring soundfile,$(FAUSTOPTS)))
+CPPFLAGS    += -DSOUNDFILE
+endif
 else ifdef HEAVY
 # options for Heavy PD compilation
 PATCHNAME   ?= $(HEAVY)
